@@ -7,3 +7,4 @@ contourpy
 fonttools
 matplotlib
 pillow
+imageio-ffmpeg
