@@ -39,6 +39,12 @@
   #log .ok { color: var(--chartreuse); } #log .err { color: #FFB4B4; }
   a { color: var(--pine); font-weight: 600; }
   .hidden { display: none; }
+  .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-bottom: 8px; }
+  .themes label { margin: 0; cursor: pointer; text-align: center; font-size: 12px; font-weight: 600; }
+  .themes input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .themes img { display: block; width: 100%; aspect-ratio: 11 / 20; object-fit: cover; border-radius: 6px; border: 3px solid transparent; background: #dfe8f5; }
+  .themes input:checked + img { border-color: var(--chartreuse); box-shadow: 0 0 0 2px var(--navy); }
+  .themes label:hover img { border-color: var(--navy); }
   footer { text-align: center; padding: 20px; font-size: 13px; opacity: .8; }
 </style>
 </head>
@@ -51,16 +57,8 @@
 <main>
   <section class="card">
     <h2>GitHub access</h2>
-    <div class="row">
-      <div>
-        <label for="repo">Repository <span class="hint">owner/name holding the Render workflow</span></label>
-        <input type="text" id="repo" value="YannickRiou/gpx2server">
-      </div>
-      <div>
-        <label for="token">Personal access token <span class="hint">classic, scopes <code>repo</code> and <code>gist</code></span></label>
-        <input type="password" id="token" placeholder="ghp_…" autocomplete="off">
-      </div>
-    </div>
+    <label for="token">Personal access token <span class="hint">classic, scopes <code>repo</code> and <code>gist</code> · workflow of <span id="repo-name"></span></span></label>
+    <input type="password" id="token" placeholder="ghp_…" autocomplete="off">
     <label class="check"><input type="checkbox" id="remember"> Remember the token in this browser only</label>
   </section>
 
@@ -90,11 +88,9 @@
       <label><input type="radio" name="output" value="mp4" checked> MP4 video</label>
       <label><input type="radio" name="output" value="gif"> GIF animation</label>
     </div>
+    <label>Theme <span class="hint">previews rendered by gpx2map on the same hike</span></label>
+    <div id="themes" class="themes"></div>
     <div class="row">
-      <div>
-        <label for="theme">Theme</label>
-        <select id="theme"></select>
-      </div>
       <div>
         <label for="format">Format</label>
         <select id="format">
@@ -138,20 +134,33 @@ const THEMES = ["wood","paper","ink","topo","monoblue","pastel","forest","ocean"
 const $ = id => document.getElementById(id);
 const api = "https://api.github.com";
 
-THEMES.forEach(t => { const o = document.createElement("option"); o.value = o.textContent = t; $("theme").appendChild(o); });
+// The repository is the one serving this page: <owner>.github.io/<repo>/ (fallback for local previews).
+const REPO = (() => {
+  const m = location.hostname.match(/^([^.]+)\.github\.io$/i);
+  const seg = location.pathname.split("/").filter(Boolean)[0];
+  return m && seg ? `${m[1]}/${seg}` : "YannickRiou/gpx2server";
+})();
+$("repo-name").textContent = REPO;
+const PREVIEWS = `https://raw.githubusercontent.com/${REPO.split("/")[0]}/gpx2map/main/examples/ayguelongue_`;
+
+// theme thumbnails (the gpx2map gallery)
+THEMES.forEach((t, i) => {
+  const l = document.createElement("label");
+  l.innerHTML = `<input type="radio" name="theme" value="${t}" ${i === 0 ? "checked" : ""}>` +
+                `<img src="${PREVIEWS}${t}.png" alt="${t}" loading="lazy" title="${t}">${t}`;
+  $("themes").appendChild(l);
+});
+function theme() { return document.querySelector("input[name=theme]:checked").value; }
 
 // ---- token memory ----
 try {
   const saved = localStorage.getItem("gpx2server.token");
   if (saved) { $("token").value = saved; $("remember").checked = true; }
-  const repo = localStorage.getItem("gpx2server.repo");
-  if (repo) $("repo").value = repo;
 } catch (e) {}
 function rememberToken() {
   try {
     if ($("remember").checked) localStorage.setItem("gpx2server.token", $("token").value);
     else localStorage.removeItem("gpx2server.token");
-    localStorage.setItem("gpx2server.repo", $("repo").value.trim());
   } catch (e) {}
 }
 
@@ -177,7 +186,7 @@ function extraArgs() {
 function inputs(gpxSource) {
   return {
     gpx: gpxSource, output: output(), title: $("title").value.trim(), lang: $("lang").value,
-    theme: $("theme").value, format: $("format").value, summit: $("summit").checked, extra: extraArgs(),
+    theme: theme(), format: $("format").value, summit: $("summit").checked, extra: extraArgs(),
   };
 }
 function refresh() {
@@ -252,9 +261,8 @@ async function uploadGist(files, token) {
 // ---- run ----
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 $("go").onclick = async () => {
-  const token = $("token").value.trim(), repo = $("repo").value.trim();
+  const token = $("token").value.trim(), repo = REPO;
   if (!token) { log("A personal access token is needed (classic, scopes repo + gist).", "err"); return; }
-  if (!/^[^/]+\/[^/]+$/.test(repo)) { log("Repository must be owner/name.", "err"); return; }
   const files = Array.from($("files").files);
   const urls = $("urls").value.split(/\s+/).filter(Boolean);
   if (!files.length && !urls.length) { log("Choose a GPX file or give a URL.", "err"); return; }

@@ -22,7 +22,7 @@ args=("${gpx[@]}" --lang "${LANG_:-en}" --cache-dir "$HERE/cache")
 [[ "${SUMMIT:-true}" == "true" ]] && args+=(--summit)
 # split the free options like a shell would (quotes allowed), without eval: a colour such as
 # "#DBE64C" would otherwise start a bash comment
-mapfile -t extra < <(python3 -c 'import shlex, sys; print("\n".join(shlex.split(sys.argv[1], comments=False)))' "${EXTRA:-}")
+mapfile -t extra < <(python3 -c 'import shlex, sys; sys.stdout.write("".join(a + "\n" for a in shlex.split(sys.argv[1], comments=False)))' "${EXTRA:-}")
 
 slug=$(echo "${TITLE:-track}" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr -cs 'A-Za-z0-9' '_' | sed 's/^_//; s/_$//')
 [[ -n "$slug" ]] || slug=track
