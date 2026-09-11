@@ -129,6 +129,7 @@
 </main>
 <footer>gpx2server · gpx2map · gpx2anim · gpx2core · gpx2engraving — MIT</footer>
 
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
 <script>
 const THEMES = ["wood","paper","ink","topo","monoblue","pastel","forest","ocean","terracotta","copper","sunset","autumn","noir","midnight","blueprint","emerald","neon","satellite"];
 const $ = id => document.getElementById(id);
@@ -212,10 +213,26 @@ function log(msg, cls) {
   line.textContent = new Date().toLocaleTimeString() + "  " + msg; $("log").appendChild(line);
   $("log").scrollTop = $("log").scrollHeight;
 }
-function logLink(text, href) {
+function logLink(text, href, download) {
   const line = document.createElement("div"); const a = document.createElement("a");
-  a.href = href; a.target = "_blank"; a.textContent = text; a.style.color = "#DBE64C";
+  a.href = href; a.textContent = text; a.style.color = "#DBE64C";
+  if (download) a.download = download; else a.target = "_blank";
   line.textContent = new Date().toLocaleTimeString() + "  "; line.appendChild(a); $("log").appendChild(line);
+}
+
+// Fetch the artifact zip with the token, unzip it in the browser and offer the files themselves.
+async function offerFiles(repo, artifact, token) {
+  const r = await fetch(`${api}/repos/${repo}/actions/artifacts/${artifact.id}/zip`, {
+    headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github+json" },
+  });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const zip = fflate.unzipSync(new Uint8Array(await r.arrayBuffer()));
+  for (const [name, data] of Object.entries(zip)) {
+    if (!data.length) continue;
+    const type = name.endsWith(".mp4") ? "video/mp4" : name.endsWith(".gif") ? "image/gif" : "image/png";
+    const url = URL.createObjectURL(new Blob([data], { type }));
+    logLink(`Save ${name} (${(data.length / 1e6).toFixed(1)} MB)`, url, name);
+  }
 }
 $("clear").onclick = () => { $("log").textContent = ""; };
 
@@ -297,8 +314,12 @@ $("go").onclick = async () => {
     log("Finished: " + run.conclusion, run.conclusion === "success" ? "ok" : "err");
     if (run.conclusion === "success") {
       const arts = await gh("GET", `/repos/${repo}/actions/runs/${run.id}/artifacts`, null, token);
-      for (const a of arts.artifacts || []) log(`Artifact ${a.name} (${(a.size_in_bytes / 1e6).toFixed(1)} MB zipped), kept until ${new Date(a.expires_at).toLocaleDateString()}`);
-      logLink("Download from the run page (Artifacts box)", run.html_url);
+      for (const a of arts.artifacts || []) {
+        log(`Artifact ${a.name}, ${(a.size_in_bytes / 1e6).toFixed(1)} MB zipped, kept until ${new Date(a.expires_at).toLocaleDateString()}`);
+        logLink(`Download ${a.name}.zip`, `https://github.com/${repo}/actions/runs/${run.id}/artifacts/${a.id}`);
+        try { await offerFiles(repo, a, token); }
+        catch (e) { log("Direct file links unavailable here (" + e.message + "); use the zip link above.", "err"); }
+      }
     } else {
       logLink("See the log of the failed run", run.html_url);
     }

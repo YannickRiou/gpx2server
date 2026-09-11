@@ -34,7 +34,9 @@ You can also skip the form: run the workflow from the **Actions** tab with URL(s
    Paste it in the form; tick *Remember* to keep it in your browser's local storage only.
    The token never leaves your browser except towards `api.github.com`.
 3. Open the page, choose a GPX, a title, PNG or MP4 or GIF, a theme, and press **Render**.
-   The page follows the run and links to it when done; the file is in the run's *Artifacts* box.
+   The page follows the run and, when it is done, offers the file itself: it downloads the
+   artifact with your token, unzips it in the browser (GitHub always zips artifacts) and shows a
+   *Save …mp4* link. A direct link to the zip and to the run page are given as well.
 
 Cloning for local work needs the submodules: `git clone --recursive`.
 
