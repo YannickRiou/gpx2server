@@ -1,0 +1,6 @@
+[submodule "gpx2map"]
+	path = gpx2map
+	url = https://github.com/YannickRiou/gpx2map.git
+[submodule "gpx2anim"]
+	path = gpx2anim
+	url = https://github.com/YannickRiou/gpx2anim.git

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gpx2server</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@500;700&family=Mulish:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #113B54; --chartreuse: #DBE64C; --white: #FFFFFF; --periwinkle: #BBD1FF;
+    --water: #E2F4DF; --pine: #024442;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--white); color: var(--navy); font-family: Mulish, system-ui, sans-serif; font-size: 15px; line-height: 1.45; }
+  header { background: var(--navy); color: var(--white); padding: 28px 20px; }
+  header h1 { font-family: "Funnel Display", sans-serif; font-weight: 700; font-size: 30px; margin: 0 0 6px; }
+  header p { margin: 0; opacity: .9; max-width: 720px; }
+  main { max-width: 900px; margin: 0 auto; padding: 20px; display: grid; gap: 18px; }
+  section { background: var(--water); border-radius: 10px; padding: 18px 20px; }
+  section.card { background: var(--periwinkle); }
+  h2 { font-family: "Funnel Display", sans-serif; font-weight: 700; font-size: 18px; margin: 0 0 12px; }
+  label { display: block; font-weight: 600; margin: 10px 0 4px; }
+  .hint { font-weight: 400; font-size: 13px; opacity: .8; }
+  input[type=text], input[type=password], input[type=number], input[type=url], select, textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid #8ea6c6; border-radius: 6px; background: var(--white); color: var(--navy); font: inherit;
+  }
+  textarea { min-height: 60px; resize: vertical; }
+  input[type=file] { display: block; margin-top: 4px; }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .radios { display: flex; gap: 14px; flex-wrap: wrap; }
+  .radios label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; margin: 0; cursor: pointer; }
+  .check { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-weight: 600; cursor: pointer; }
+  button.cta { background: var(--chartreuse); color: #000; border: 0; border-radius: 8px; padding: 12px 22px; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer; }
+  button.cta:disabled { opacity: .5; cursor: default; }
+  button.ghost { background: transparent; color: var(--navy); border: 1px solid var(--navy); border-radius: 8px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+  pre { background: var(--navy); color: var(--white); border-radius: 8px; padding: 12px 14px; font-size: 13px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 8px 0 0; }
+  #log { min-height: 80px; }
+  #log .ok { color: var(--chartreuse); } #log .err { color: #FFB4B4; }
+  a { color: var(--pine); font-weight: 600; }
+  .hidden { display: none; }
+  footer { text-align: center; padding: 20px; font-size: 13px; opacity: .8; }
+</style>
+</head>
+<body>
+<header>
+  <h1>gpx2server</h1>
+  <p>Turn a GPX hike into a themed map (PNG), or an animation (GIF, MP4), rendered by GitHub Actions.
+     The GPX goes through a secret gist that is deleted once the run is over; nothing is committed.</p>
+</header>
+<main>
+  <section class="card">
+    <h2>GitHub access</h2>
+    <div class="row">
+      <div>
+        <label for="repo">Repository <span class="hint">owner/name holding the Render workflow</span></label>
+        <input type="text" id="repo" value="YannickRiou/gpx2server">
+      </div>
+      <div>
+        <label for="token">Personal access token <span class="hint">classic, scopes <code>repo</code> and <code>gist</code></span></label>
+        <input type="password" id="token" placeholder="ghp_…" autocomplete="off">
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" id="remember"> Remember the token in this browser only</label>
+  </section>
+
+  <section>
+    <h2>Track</h2>
+    <label for="files">GPX file(s) <span class="hint">several files are merged into one multi-day trip</span></label>
+    <input type="file" id="files" accept=".gpx,application/gpx+xml" multiple>
+    <label for="urls">…or URL(s) <span class="hint">one per line; Dropbox and Google Drive share links work</span></label>
+    <textarea id="urls" placeholder="https://…"></textarea>
+    <div class="row">
+      <div>
+        <label for="title">Title <span class="hint">default: track name from the GPX</span></label>
+        <input type="text" id="title" placeholder="Pic de Cagire">
+      </div>
+      <div>
+        <label for="lang">Language <span class="hint">same as the title</span></label>
+        <select id="lang"><option value="en">English</option><option value="fr">Français</option></select>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" id="summit" checked> Highest point in the title, e.g. “Pic de Cagire (1 902 m)”</label>
+  </section>
+
+  <section>
+    <h2>Output</h2>
+    <div class="radios">
+      <label><input type="radio" name="output" value="png"> PNG picture</label>
+      <label><input type="radio" name="output" value="mp4" checked> MP4 video</label>
+      <label><input type="radio" name="output" value="gif"> GIF animation</label>
+    </div>
+    <div class="row">
+      <div>
+        <label for="theme">Theme</label>
+        <select id="theme"></select>
+      </div>
+      <div>
+        <label for="format">Format</label>
+        <select id="format">
+          <option value="landscape">Landscape 16:9 (1920 × 1080)</option>
+          <option value="square">Square (1080 × 1080)</option>
+          <option value="portrait">Portrait 9:16 (1080 × 1920)</option>
+          <option value="auto" id="opt-auto" class="hidden">Auto (tight around the track)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" id="png-opts">
+      <div><label for="dpi">Resolution (dpi)</label><input type="number" id="dpi" value="300" min="50" max="600"></div>
+    </div>
+    <div class="row" id="anim-opts">
+      <div><label for="fps">Frames per second</label><input type="number" id="fps" value="30" min="5" max="60"></div>
+      <div><label for="seconds">Drawing time (s) <span class="hint">empty = use the pace</span></label><input type="number" id="seconds" value="12" min="1" step="0.5"></div>
+      <div><label for="speed">Pace (km per second) <span class="hint">overrides the time</span></label><input type="number" id="speed" step="0.1" min="0.1" placeholder="1.5"></div>
+      <div><label for="hold">Still seconds before / after</label><input type="text" id="hold" value="1.5 / 3"></div>
+    </div>
+    <div class="row">
+      <div><label for="smooth">Track smoothing (m) <span class="hint">5–10 for noisy GPS, empty = off</span></label><input type="number" id="smooth" min="0" step="1" placeholder="8"></div>
+      <div><label for="despike">Despike (km/h) <span class="hint">10–12 for hiking, empty = off</span></label><input type="number" id="despike" min="0" step="1" placeholder="10"></div>
+    </div>
+    <label for="extra">Other options <span class="hint">anything gpx2map / gpx2anim accepts: <code>--track-color #DBE64C --distance 12.4 --water osm</code></span></label>
+    <input type="text" id="extra" placeholder="--track-color #DBE64C">
+    <label>Equivalent command</label>
+    <pre id="cmd"></pre>
+  </section>
+
+  <section class="card">
+    <h2>Run</h2>
+    <button class="cta" id="go">Render on GitHub Actions</button>
+    <button class="ghost" id="clear">Clear log</button>
+    <pre id="log"></pre>
+  </section>
+</main>
+<footer>gpx2server · gpx2map · gpx2anim · gpx2core · gpx2engraving — MIT</footer>
+
+<script>
+const THEMES = ["wood","paper","ink","topo","monoblue","pastel","forest","ocean","terracotta","copper","sunset","autumn","noir","midnight","blueprint","emerald","neon","satellite"];
+const $ = id => document.getElementById(id);
+const api = "https://api.github.com";
+
+THEMES.forEach(t => { const o = document.createElement("option"); o.value = o.textContent = t; $("theme").appendChild(o); });
+
+// ---- token memory ----
+try {
+  const saved = localStorage.getItem("gpx2server.token");
+  if (saved) { $("token").value = saved; $("remember").checked = true; }
+  const repo = localStorage.getItem("gpx2server.repo");
+  if (repo) $("repo").value = repo;
+} catch (e) {}
+function rememberToken() {
+  try {
+    if ($("remember").checked) localStorage.setItem("gpx2server.token", $("token").value);
+    else localStorage.removeItem("gpx2server.token");
+    localStorage.setItem("gpx2server.repo", $("repo").value.trim());
+  } catch (e) {}
+}
+
+// ---- form state ----
+function output() { return document.querySelector("input[name=output]:checked").value; }
+function extraArgs() {
+  const parts = [];
+  if (output() === "png") {
+    if ($("dpi").value && $("dpi").value !== "300") parts.push("--dpi " + $("dpi").value);
+  } else {
+    if ($("fps").value && $("fps").value !== "30") parts.push("--fps " + $("fps").value);
+    if ($("speed").value) parts.push("--speed " + $("speed").value);
+    else if ($("seconds").value && $("seconds").value !== "12") parts.push("--seconds " + $("seconds").value);
+    const h = $("hold").value.split("/").map(s => s.trim());
+    if (h[0] && h[0] !== "1.5") parts.push("--hold-start " + h[0]);
+    if (h[1] && h[1] !== "3") parts.push("--hold-end " + h[1]);
+  }
+  if ($("smooth").value) parts.push("--track-smooth " + $("smooth").value);
+  if ($("despike").value) parts.push("--despike " + $("despike").value);
+  if ($("extra").value.trim()) parts.push($("extra").value.trim());
+  return parts.join(" ");
+}
+function inputs(gpxSource) {
+  return {
+    gpx: gpxSource, output: output(), title: $("title").value.trim(), lang: $("lang").value,
+    theme: $("theme").value, format: $("format").value, summit: $("summit").checked, extra: extraArgs(),
+  };
+}
+function refresh() {
+  const png = output() === "png";
+  $("png-opts").classList.toggle("hidden", !png);
+  $("anim-opts").classList.toggle("hidden", png);
+  $("opt-auto").classList.toggle("hidden", !png);
+  if (!png && $("format").value === "auto") $("format").value = "landscape";
+  const i = inputs("track.gpx");
+  const tool = png ? "gpx2map" : "gpx2anim";
+  const q = s => /[\s"']/.test(s) ? '"' + s.replace(/"/g, '\\"') + '"' : s;
+  let cmd = `${tool}.bat track.gpx --lang ${i.lang}` + (i.title ? ` -t ${q(i.title)}` : "") + (i.summit ? " --summit" : "")
+          + ` --theme ${i.theme} --format ${i.format}` + (i.extra ? " " + i.extra : "");
+  if (!png) cmd += ` -o track_${i.format}.${i.output}`;
+  $("cmd").textContent = cmd;
+}
+document.querySelectorAll("input, select").forEach(el => { el.addEventListener("input", refresh); el.addEventListener("change", refresh); });
+refresh();
+
+// ---- log ----
+function log(msg, cls) {
+  const line = document.createElement("div"); if (cls) line.className = cls;
+  line.textContent = new Date().toLocaleTimeString() + "  " + msg; $("log").appendChild(line);
+  $("log").scrollTop = $("log").scrollHeight;
+}
+function logLink(text, href) {
+  const line = document.createElement("div"); const a = document.createElement("a");
+  a.href = href; a.target = "_blank"; a.textContent = text; a.style.color = "#DBE64C";
+  line.textContent = new Date().toLocaleTimeString() + "  "; line.appendChild(a); $("log").appendChild(line);
+}
+$("clear").onclick = () => { $("log").textContent = ""; };
+
+// ---- GitHub API ----
+async function gh(method, path, body, token) {
+  const r = await fetch(api + path, {
+    method, headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!r.ok && r.status !== 204) {
+    let detail = ""; try { detail = (await r.json()).message || ""; } catch (e) {}
+    throw new Error(`${method} ${path}: HTTP ${r.status} ${detail}`);
+  }
+  return r.status === 204 ? null : r.json();
+}
+
+// ---- GPX -> gzip -> base64 -> gist parts ----
+async function gzipBase64(file) {
+  const stream = file.stream().pipeThrough(new CompressionStream("gzip"));
+  const buf = new Uint8Array(await new Response(stream).arrayBuffer());
+  let bin = ""; const chunk = 0x8000;
+  for (let i = 0; i < buf.length; i += chunk) bin += String.fromCharCode.apply(null, buf.subarray(i, i + chunk));
+  return btoa(bin);
+}
+async function uploadGist(files, token) {
+  const PART = 900000;   // characters per gist file, well under the 1 MB limit
+  const gistFiles = {};
+  let n = 0;
+  for (const f of files) {
+    n++;
+    const b64 = await gzipBase64(f);
+    const base = f.name.replace(/[^A-Za-z0-9._-]/g, "_");
+    const parts = Math.ceil(b64.length / PART);
+    for (let p = 0; p < parts; p++) {
+      gistFiles[`${String(n).padStart(2, "0")}_${base}.gz.b64.part${String(p).padStart(3, "0")}`] = { content: b64.slice(p * PART, (p + 1) * PART) };
+    }
+    log(`${f.name}: ${(f.size / 1e6).toFixed(1)} MB -> ${(b64.length / 1e6).toFixed(1)} MB compressed, ${parts} part(s)`);
+  }
+  const g = await gh("POST", "/gists", { description: "gpx2server upload (deleted after the run)", public: false, files: gistFiles }, token);
+  return g.id;
+}
+
+// ---- run ----
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+$("go").onclick = async () => {
+  const token = $("token").value.trim(), repo = $("repo").value.trim();
+  if (!token) { log("A personal access token is needed (classic, scopes repo + gist).", "err"); return; }
+  if (!/^[^/]+\/[^/]+$/.test(repo)) { log("Repository must be owner/name.", "err"); return; }
+  const files = Array.from($("files").files);
+  const urls = $("urls").value.split(/\s+/).filter(Boolean);
+  if (!files.length && !urls.length) { log("Choose a GPX file or give a URL.", "err"); return; }
+  rememberToken();
+  $("go").disabled = true;
+  let gistId = null;
+  try {
+    let source;
+    if (files.length) { log("Uploading the GPX to a secret gist…"); gistId = await uploadGist(files, token); source = gistId; log("Gist " + gistId + " created.", "ok"); }
+    else source = urls.join(" ");
+    const started = Date.now();
+    const payload = inputs(source);
+    payload.summit = String(payload.summit);           // workflow_dispatch inputs are strings
+    log("Dispatching the Render workflow with: " + JSON.stringify({ ...payload, gpx: files.length ? "gist" : payload.gpx }));
+    await gh("POST", `/repos/${repo}/actions/workflows/render.yml/dispatches`, { ref: "main", inputs: payload }, token);
+    log("Workflow dispatched. Looking for the run…", "ok");
+    let run = null;
+    for (let i = 0; i < 30 && !run; i++) {
+      await sleep(5000);
+      const rs = await gh("GET", `/repos/${repo}/actions/runs?event=workflow_dispatch&per_page=5`, null, token);
+      run = (rs.workflow_runs || []).find(r => new Date(r.created_at).getTime() >= started - 90000);
+    }
+    if (!run) throw new Error("run not found; check the Actions tab");
+    logLink("Run #" + run.run_number + " — open on GitHub", run.html_url);
+    let status = run.status;
+    while (status !== "completed") {
+      await sleep(15000);
+      const r = await gh("GET", `/repos/${repo}/actions/runs/${run.id}`, null, token);
+      if (r.status !== status) { status = r.status; log("Status: " + status); }
+      run = r;
+    }
+    log("Finished: " + run.conclusion, run.conclusion === "success" ? "ok" : "err");
+    if (run.conclusion === "success") {
+      const arts = await gh("GET", `/repos/${repo}/actions/runs/${run.id}/artifacts`, null, token);
+      for (const a of arts.artifacts || []) log(`Artifact ${a.name} (${(a.size_in_bytes / 1e6).toFixed(1)} MB zipped), kept until ${new Date(a.expires_at).toLocaleDateString()}`);
+      logLink("Download from the run page (Artifacts box)", run.html_url);
+    } else {
+      logLink("See the log of the failed run", run.html_url);
+    }
+  } catch (e) {
+    log(e.message, "err");
+  } finally {
+    if (gistId) {
+      try { await gh("DELETE", "/gists/" + gistId, null, token); log("Gist deleted.", "ok"); }
+      catch (e) { log("Could not delete the gist " + gistId + ": " + e.message, "err"); }
+    }
+    $("go").disabled = false;
+  }
+};
+</script>
+</body>
+</html>

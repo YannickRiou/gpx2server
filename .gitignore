@@ -1,0 +1,7 @@
+work/
+out/
+cache/
+fonts/
+__pycache__/
+*.pyc
+

@@ -1,0 +1,9 @@
+numpy
+scipy
+shapely
+pyproj
+requests
+contourpy
+fonttools
+matplotlib
+pillow

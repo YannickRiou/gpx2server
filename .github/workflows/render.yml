@@ -1,0 +1,98 @@
+name: Render
+
+# Triggered by the web form (docs/index.html on GitHub Pages) or by hand from the Actions tab.
+# The GPX never enters the repository: it comes from URL(s) or from a secret gist created by
+# the form, and the result is a workflow artifact kept for a few days.
+on:
+  workflow_dispatch:
+    inputs:
+      gpx:
+        description: "GPX source: URL(s) separated by spaces, or the id of a gist made by the web form"
+        required: true
+        type: string
+      output:
+        description: "What to produce"
+        type: choice
+        options: [png, gif, mp4]
+        default: mp4
+      title:
+        description: "Title (default: track name from the GPX)"
+        type: string
+        default: ""
+      lang:
+        description: "Language of the texts (use the language of the title)"
+        type: choice
+        options: [en, fr]
+        default: en
+      theme:
+        description: "Theme (wood, paper, ink, topo, monoblue, pastel, forest, ocean, terracotta, copper, sunset, autumn, noir, midnight, blueprint, emerald, neon, satellite; several with commas for png)"
+        type: string
+        default: wood
+      format:
+        description: "Plate shape (png: auto fits the track; gif/mp4: landscape 16:9, square, portrait 9:16)"
+        type: choice
+        options: [auto, landscape, square, portrait]
+        default: landscape
+      summit:
+        description: "Highest point in the title"
+        type: boolean
+        default: true
+      extra:
+        description: "Other options passed to gpx2map / gpx2anim, e.g. --track-smooth 8 --despike 10 --speed 1.5 --fps 24 --track-color #DBE64C"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore caches (elevation model, orthophoto, fonts)
+        uses: actions/cache@v4
+        with:
+          path: |
+            cache
+            fonts
+          key: gpx2-cache-${{ github.run_id }}
+          restore-keys: gpx2-cache-
+
+      - name: Fonts (Funnel Display, Mulish)
+        run: bash scripts/fonts.sh fonts
+
+      - name: Fetch the GPX
+        env:
+          GPX: ${{ inputs.gpx }}
+        run: bash scripts/fetch_gpx.sh "$GPX" work
+
+      - name: Render
+        env:
+          OUTPUT: ${{ inputs.output }}
+          TITLE: ${{ inputs.title }}
+          LANG_: ${{ inputs.lang }}
+          THEME: ${{ inputs.theme }}
+          FORMAT: ${{ inputs.format }}
+          SUMMIT: ${{ inputs.summit }}
+          EXTRA: ${{ inputs.extra }}
+        run: bash scripts/render.sh work out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gpx2-${{ inputs.output }}-${{ github.run_number }}
+          path: out/*
+          retention-days: 7
+          if-no-files-found: error
