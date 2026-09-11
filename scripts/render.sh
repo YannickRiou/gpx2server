@@ -24,20 +24,19 @@ args=("${gpx[@]}" --lang "${LANG_:-en}" --cache-dir "$HERE/cache")
 # "#DBE64C" would otherwise start a bash comment
 mapfile -t extra < <(python3 -c 'import shlex, sys; sys.stdout.write("".join(a + "\n" for a in shlex.split(sys.argv[1], comments=False)))' "${EXTRA:-}")
 
-slug=$(echo "${TITLE:-track}" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr -cs 'A-Za-z0-9' '_' | sed 's/^_//; s/_$//')
-[[ -n "$slug" ]] || slug=track
 theme="${THEME:-wood}"
 fmt="${FORMAT:-landscape}"
 
+# the tools name the files after the title: Pic-de-Cagire_blueprint.png, Pic-de-Cagire_landscape_wood.mp4
 case "${OUTPUT:-mp4}" in
     png)
-        python3 "$HERE/gpx2map/gpx2map.py" "${args[@]}" --theme "$theme" --format "$fmt" "${extra[@]}"
-        for f in "$WORK"/*.png; do mv "$f" "$OUT/${slug}_$(basename "$f" | sed 's/^[0-9]*_//')"; done
+        python3 "$HERE/gpx2map/gpx2map.py" "${args[@]}" --theme "$theme" --format "$fmt" --out-dir "$OUT" "${extra[@]}"
         ;;
     gif|mp4)
         [[ "$fmt" == "auto" ]] && fmt=landscape
-        python3 "$HERE/gpx2anim/gpx2anim.py" "${args[@]}" --theme "$theme" --format "$fmt" "${extra[@]}" \
-            -o "$OUT/${slug}_${fmt}_${theme}.${OUTPUT}"
+        gif=(); [[ "$OUTPUT" == "gif" ]] && gif=(--gif)
+        python3 "$HERE/gpx2anim/gpx2anim.py" "${args[@]}" --theme "$theme" --format "$fmt" --out-dir "$OUT" \
+            "${gif[@]}" "${extra[@]}"
         ;;
     *)
         echo "::error::unknown output '$OUTPUT'"; exit 1 ;;
