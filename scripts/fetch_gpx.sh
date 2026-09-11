@@ -31,7 +31,8 @@ check_gpx() {
 }
 
 if [[ "$SRC" =~ ^[0-9a-f]{20,40}$ ]]; then
-    echo "Gist $SRC"
+    echo "::add-mask::$SRC"       # the run log is public on a public repository: never show the id
+    echo "Gist upload"
     # secret gists are readable by id without authentication
     curl -fsSL -H "Accept: application/vnd.github+json" "https://api.github.com/gists/$SRC" > "$DEST/gist.json"
     python3 - "$DEST" <<'EOF'

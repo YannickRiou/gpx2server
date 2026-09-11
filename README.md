@@ -74,11 +74,13 @@ first run; without network to Google Fonts the runner's DejaVu is used.
 
 ## Privacy
 
-The repository is public, so: the GPX never lands in it, the gist is secret (not listed, only
-reachable by its id) and deleted after the run, the run log shows file sizes but not coordinates,
-and the artifact is only downloadable by people with access to the repository's Actions (you).
-If you would rather keep even that private, make the repository private: the same setup works
-within the 2 000 free minutes per month.
+The repository is public, so its run logs are public too. Hence: the GPX never lands in the
+repository, the gist is secret (not listed, only reachable by its id), its id is masked in the log
+and the gist is deleted after the run, and the log shows the title, distances and lake names but
+no coordinates. Two things remain visible to others: the run log itself, and the **artifact**, which
+any logged-in GitHub user can download from a public repository's run page while it exists (7 days).
+If that matters to you, make the repository private: the same setup works within the 2 000 free
+minutes per month, and artifacts then need access to the repository.
 
 ## Licence
 
