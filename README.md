@@ -2,16 +2,22 @@
 
 Render a GPX hike **online**, without installing anything: a web form on GitHub Pages sends the
 GPX and your choices to a GitHub Actions workflow, which runs
-[gpx2map](https://github.com/YannickRiou/gpx2map) (themed PNG) or
-[gpx2anim](https://github.com/YannickRiou/gpx2anim) (GIF / MP4, 16:9, square or vertical) and
-hands the result back as a downloadable artifact. Free on a GitHub Free account: the repository
-is public, so the Actions minutes are unlimited.
+[gpx2map](https://github.com/YannickRiou/gpx2map) (themed PNG),
+[gpx2anim](https://github.com/YannickRiou/gpx2anim) (GIF / MP4, 16:9, square or vertical) or the
+gpx2engraving engine (laser-ready SVG for LightBurn) and hands the result back as a downloadable
+artifact. Free on a GitHub Free account: the repository is public, so the Actions minutes are
+unlimited.
 
 ```
-browser (GitHub Pages form) ──gist──▶ GitHub Actions (ubuntu runner) ──▶ artifact (PNG / GIF / MP4)
+browser (GitHub Pages form) ──gist──▶ GitHub Actions (ubuntu runner) ──▶ artifact (PNG / GIF / MP4 / SVG)
         │                                     │
         └── dispatches the workflow           └── gpx2map / gpx2anim / gpx2core, IGN data
 ```
+
+The **SVG** output is the laser-engraving file: title, track over contour lines, lakes, elevation
+profile and statistics, with one colour per LightBurn operation (fill / line / cut). It is produced
+by the engine embedded in gpx2map (which is gpx2engraving itself), so it carries no theme; the
+plate shape follows `format` (`auto` fits the track).
 
 ## How the GPX travels
 
@@ -45,7 +51,7 @@ Cloning for local work needs the submodules: `git clone --recursive`.
 | Input | Default | Meaning |
 |---|---|---|
 | `gpx` | | URL(s) separated by spaces, or the id of a gist made by the form |
-| `output` | `mp4` | `png`, `gif` or `mp4` |
+| `output` | `mp4` | `png`, `gif`, `mp4`, or `svg` (laser-ready SVG for LightBurn) |
 | `title` | track name | engraved title |
 | `lang` | `en` | `en` or `fr`; keep it in the language of the title |
 | `theme` | `wood` | any gpx2map theme; several with commas for `png` |

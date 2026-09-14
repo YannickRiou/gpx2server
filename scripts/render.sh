@@ -29,6 +29,11 @@ fmt="${FORMAT:-landscape}"
 
 # the tools name the files after the title: Pic-de-Cagire_blueprint.png, Pic-de-Cagire_landscape_wood.mp4
 case "${OUTPUT:-mp4}" in
+    svg)
+        # laser-ready SVG (LightBurn); the engine embedded in gpx2map is gpx2engraving itself.
+        # No theme: the SVG has one colour per laser operation. --format auto fits the track.
+        python3 "$HERE/gpx2map/core/engine.py" "${args[@]}" --format "$fmt" --out-dir "$OUT" "${extra[@]}"
+        ;;
     png)
         python3 "$HERE/gpx2map/gpx2map.py" "${args[@]}" --theme "$theme" --format "$fmt" --out-dir "$OUT" "${extra[@]}"
         ;;
