@@ -36,12 +36,11 @@ You can also skip the form: run the workflow from the **Actions** tab with URL(s
    Settings → Pages → *Deploy from a branch* → `main`, folder `/docs`. The form is then at
    `https://<user>.github.io/gpx2server/`.
 2. **Create a personal access token** (classic) at Settings → Developer settings → Personal access
-   tokens, with the scopes `repo` (to dispatch the workflow) and `gist` (to upload the GPX).
-   Paste it in the form; tick *Remember* to keep it in your browser's local storage only.
-   The token never leaves your browser except towards `api.github.com`.
-   Entering the token also shows, under the field, whether the account can run (public-repo runs
-   are free and unlimited) and, when the token has the `user` scope, the private-repo minute
-   balance. A **Preview** panel shows the chosen theme on a sample hike before you run.
+   tokens, with the scopes `repo` (to dispatch the workflow), `gist` (to upload the GPX) and
+   `user` (to read your Actions minute balance). Paste it in the form; tick *Remember* to keep it
+   in your browser's local storage only. The token never leaves your browser except towards
+   `api.github.com`. Entering it shows, under the field, the account, that public-repo runs are
+   free and unlimited, and the private-repo minutes used and left this cycle.
 3. Open the page, choose a GPX, a title, PNG or MP4 or GIF or SVG, a theme, and press **Render**.
    The page follows the run and, when it is done, offers the file itself: it downloads the
    artifact with your token, unzips it in the browser (GitHub always zips artifacts) and shows a

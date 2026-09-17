@@ -67,10 +67,6 @@
   .themes label:has(input:checked) { color: var(--ink); font-weight: 700; }
   .themes label:has(input:checked) img { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
   .themes label:hover img { border-color: var(--accent); }
-  .preview { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
-  .preview img { width: 190px; max-width: 45%; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); box-shadow: var(--shadow); }
-  .preview .cap { flex: 1 1 220px; }
-  .preview .cap p { margin: 0 0 8px; }
   footer { text-align: center; padding: 24px; font-size: 13px; color: var(--muted); }
 </style>
 </head>
@@ -86,7 +82,7 @@
 <main>
   <section>
     <h2>GitHub access</h2>
-    <label for="token">Personal access token <span class="hint">classic, scopes <code>repo</code> and <code>gist</code> · workflow of <span id="repo-name"></span></span></label>
+    <label for="token">Personal access token <span class="hint">classic, scopes <code>repo</code>, <code>gist</code> and <code>user</code> · workflow of <span id="repo-name"></span></span></label>
     <input type="password" id="token" placeholder="ghp_…" autocomplete="off">
     <label class="check"><input type="checkbox" id="remember"> Remember the token in this browser only</label>
     <p id="usage">Public-repo runs use <strong>unlimited free</strong> Actions minutes. Enter a token to check your account.</p>
@@ -151,18 +147,6 @@
     <input type="text" id="extra" placeholder="--track-color #E4572E">
     <label>Equivalent command</label>
     <pre id="cmd"></pre>
-  </section>
-
-  <section>
-    <h2>Preview</h2>
-    <div class="preview">
-      <img id="preview" alt="output style preview">
-      <div class="cap">
-        <p id="preview-cap"></p>
-        <p class="hint">This is the chosen style on a sample hike. Your own track, title and the selected
-          format will differ; the real render happens on GitHub Actions.</p>
-      </div>
-    </div>
   </section>
 
   <section>
@@ -253,14 +237,6 @@ function refresh() {
   if (anim) cmd += ` -o track_${i.format}.${i.output}`;
   else if (svg) cmd += " -o track.svg";
   $("cmd").textContent = cmd;
-
-  // preview: the chosen theme (wood stands in for the engraving look)
-  const prevTheme = svg ? "wood" : i.theme;
-  $("preview").src = PREVIEWS + prevTheme + ".png";
-  $("preview-cap").textContent = svg
-    ? "Laser engraving: title, track, contour lines, lakes and the elevation profile, with one colour "
-      + "per LightBurn layer (fill / line / cut). Shown here as the engraved-wood style."
-    : (png ? "Still map" : out.toUpperCase() + " animation") + ` in the “${i.theme}” theme.`;
 }
 document.querySelectorAll("input, select").forEach(el => { el.addEventListener("input", refresh); el.addEventListener("change", refresh); });
 refresh();
@@ -370,7 +346,7 @@ async function uploadGist(files, token) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 $("go").onclick = async () => {
   const token = $("token").value.trim(), repo = REPO;
-  if (!token) { log("A personal access token is needed (classic, scopes repo + gist).", "err"); return; }
+  if (!token) { log("A personal access token is needed (classic, scopes repo + gist + user).", "err"); return; }
   const files = Array.from($("files").files);
   const urls = $("urls").value.split(/\s+/).filter(Boolean);
   if (!files.length && !urls.length) { log("Choose a GPX file or give a URL.", "err"); return; }
