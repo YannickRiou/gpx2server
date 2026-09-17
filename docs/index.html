@@ -5,62 +5,91 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>gpx2server</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@500;700&family=Mulish:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy: #113B54; --chartreuse: #DBE64C; --white: #FFFFFF; --periwinkle: #BBD1FF;
-    --water: #E2F4DF; --pine: #024442;
+    --bg: #F6F6F4; --surface: #FFFFFF; --surface-2: #F0EFEB; --ink: #23262B; --muted: #6E7178;
+    --border: #E4E3DE; --accent: #2F7E77; --accent-hover: #276B65; --accent-ink: #FFFFFF;
+    --danger: #B3524B; --ok: #2F7E77; --code-bg: #23262B; --code-ink: #E9E9E4; --code-ok: #86C7BE;
+    --header-bg: #23262B; --header-ink: #FFFFFF; --shadow: 0 1px 2px rgba(0,0,0,.05), 0 6px 20px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181C; --surface: #1E2126; --surface-2: #23272E; --ink: #E7E7E3; --muted: #9AA0A8;
+      --border: #2E333A; --accent: #56AEA4; --accent-hover: #66BDB2; --accent-ink: #0E1013;
+      --danger: #E08B83; --ok: #7FD1C7; --code-bg: #0F1114; --code-ink: #E7E7E3; --code-ok: #7FD1C7;
+      --header-bg: #0F1114; --header-ink: #F3F3F0; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--white); color: var(--navy); font-family: Mulish, system-ui, sans-serif; font-size: 15px; line-height: 1.45; }
-  header { background: var(--navy); color: var(--white); padding: 28px 20px; }
-  header h1 { font-family: "Funnel Display", sans-serif; font-weight: 700; font-size: 30px; margin: 0 0 6px; }
-  header p { margin: 0; opacity: .9; max-width: 720px; }
-  main { max-width: 900px; margin: 0 auto; padding: 20px; display: grid; gap: 18px; }
-  section { background: var(--water); border-radius: 10px; padding: 18px 20px; }
-  section.card { background: var(--periwinkle); }
-  h2 { font-family: "Funnel Display", sans-serif; font-weight: 700; font-size: 18px; margin: 0 0 12px; }
-  label { display: block; font-weight: 600; margin: 10px 0 4px; }
-  .hint { font-weight: 400; font-size: 13px; opacity: .8; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: Inter, system-ui, sans-serif; font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  header { background: var(--header-bg); color: var(--header-ink); padding: 32px 20px; }
+  header .wrap { max-width: 880px; margin: 0 auto; }
+  header h1 { font-weight: 700; font-size: 28px; letter-spacing: -.02em; margin: 0 0 6px; }
+  header p { margin: 0; opacity: .82; max-width: 660px; }
+  main { max-width: 880px; margin: 0 auto; padding: 22px 20px 40px; display: grid; gap: 16px; }
+  section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow); }
+  h2 { font-weight: 650; font-size: 16px; letter-spacing: -.01em; margin: 0 0 14px; }
+  label { display: block; font-weight: 600; margin: 10px 0 4px; font-size: 14px; }
+  .hint { font-weight: 400; font-size: 13px; color: var(--muted); }
+  code { background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-size: 12.5px; }
   input[type=text], input[type=password], input[type=number], input[type=url], select, textarea {
-    width: 100%; padding: 8px 10px; border: 1px solid #8ea6c6; border-radius: 6px; background: var(--white); color: var(--navy); font: inherit;
+    width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit;
   }
-  textarea { min-height: 60px; resize: vertical; }
-  input[type=file] { display: block; margin-top: 4px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+  textarea { min-height: 58px; resize: vertical; }
+  input[type=file] { display: block; margin-top: 4px; padding: 8px; }
   .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-  .radios { display: flex; gap: 14px; flex-wrap: wrap; }
-  .radios label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; margin: 0; cursor: pointer; }
-  .check { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-weight: 600; cursor: pointer; }
-  button.cta { background: var(--chartreuse); color: #000; border: 0; border-radius: 8px; padding: 12px 22px; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer; }
+  .radios { display: flex; gap: 10px; flex-wrap: wrap; }
+  .radios label { flex: 1 1 auto; text-align: center; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin: 0; cursor: pointer; font-weight: 600; transition: border-color .12s, background .12s; }
+  .radios label:hover { border-color: var(--accent); }
+  .radios label:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+  .radios input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .check { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-weight: 500; cursor: pointer; }
+  button.cta { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 9px; padding: 12px 22px; font: inherit; font-weight: 650; font-size: 15px; cursor: pointer; transition: background .12s; }
+  button.cta:hover { background: var(--accent-hover); }
   button.cta:disabled { opacity: .5; cursor: default; }
-  button.ghost { background: transparent; color: var(--navy); border: 1px solid var(--navy); border-radius: 8px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; }
-  pre { background: var(--navy); color: var(--white); border-radius: 8px; padding: 12px 14px; font-size: 13px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 8px 0 0; }
-  #log { min-height: 80px; }
-  #log .ok { color: var(--chartreuse); } #log .err { color: #FFB4B4; }
-  a { color: var(--pine); font-weight: 600; }
+  button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--border); border-radius: 9px; padding: 9px 15px; font: inherit; font-weight: 600; cursor: pointer; }
+  button.ghost:hover { border-color: var(--accent); }
+  pre { background: var(--code-bg); color: var(--code-ink); border-radius: 9px; padding: 12px 14px; font-size: 12.5px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 8px 0 0; }
+  #log { min-height: 78px; }
+  #log a { color: var(--code-ok); }
+  #log .ok { color: var(--code-ok); } #log .err { color: var(--danger); }
+  a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  a:hover { text-decoration: underline; }
   .hidden { display: none; }
-  .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-bottom: 8px; }
-  .themes label { margin: 0; cursor: pointer; text-align: center; font-size: 12px; font-weight: 600; }
+  #usage { margin-top: 10px; font-size: 13px; color: var(--muted); min-height: 18px; }
+  .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-bottom: 6px; }
+  .themes label { margin: 0; cursor: pointer; text-align: center; font-size: 12px; font-weight: 500; color: var(--muted); }
   .themes input { position: absolute; opacity: 0; width: 0; height: 0; }
-  .themes img { display: block; width: 100%; aspect-ratio: 11 / 20; object-fit: cover; border-radius: 6px; border: 3px solid transparent; background: #dfe8f5; }
-  .themes input:checked + img { border-color: var(--chartreuse); box-shadow: 0 0 0 2px var(--navy); }
-  .themes label:hover img { border-color: var(--navy); }
-  footer { text-align: center; padding: 20px; font-size: 13px; opacity: .8; }
+  .themes img { display: block; width: 100%; aspect-ratio: 11 / 20; object-fit: cover; border-radius: 7px; border: 2px solid transparent; background: var(--surface-2); margin-bottom: 3px; }
+  .themes label:has(input:checked) { color: var(--ink); font-weight: 700; }
+  .themes label:has(input:checked) img { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .themes label:hover img { border-color: var(--accent); }
+  .preview { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .preview img { width: 190px; max-width: 45%; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); box-shadow: var(--shadow); }
+  .preview .cap { flex: 1 1 220px; }
+  .preview .cap p { margin: 0 0 8px; }
+  footer { text-align: center; padding: 24px; font-size: 13px; color: var(--muted); }
 </style>
 </head>
 <body>
 <header>
-  <h1>gpx2server</h1>
-  <p>Turn a GPX hike into a themed map (PNG), an animation (GIF, MP4), or a laser-ready SVG for
-     engraving, rendered by GitHub Actions. The GPX goes through a secret gist that is deleted once
-     the run is over; nothing is committed.</p>
+  <div class="wrap">
+    <h1>gpx2server</h1>
+    <p>Turn a GPX hike into a themed map (PNG), an animation (GIF, MP4), or a laser-ready SVG for
+       engraving, rendered by GitHub Actions. The GPX goes through a secret gist that is deleted once
+       the run is over; nothing is committed.</p>
+  </div>
 </header>
 <main>
-  <section class="card">
+  <section>
     <h2>GitHub access</h2>
     <label for="token">Personal access token <span class="hint">classic, scopes <code>repo</code> and <code>gist</code> · workflow of <span id="repo-name"></span></span></label>
     <input type="password" id="token" placeholder="ghp_…" autocomplete="off">
     <label class="check"><input type="checkbox" id="remember"> Remember the token in this browser only</label>
+    <p id="usage">Public-repo runs use <strong>unlimited free</strong> Actions minutes. Enter a token to check your account.</p>
   </section>
 
   <section>
@@ -88,7 +117,7 @@
       <label><input type="radio" name="output" value="png"> PNG picture</label>
       <label><input type="radio" name="output" value="mp4" checked> MP4 video</label>
       <label><input type="radio" name="output" value="gif"> GIF animation</label>
-      <label><input type="radio" name="output" value="svg"> SVG for laser engraving</label>
+      <label><input type="radio" name="output" value="svg"> SVG for laser</label>
     </div>
     <div id="theme-block">
       <label>Theme <span class="hint">previews rendered by gpx2map on the same hike</span></label>
@@ -118,13 +147,25 @@
       <div><label for="smooth">Track smoothing (m) <span class="hint">5–10 for noisy GPS, empty = off</span></label><input type="number" id="smooth" min="0" step="1" placeholder="8"></div>
       <div><label for="despike">Despike (km/h) <span class="hint">10–12 for hiking, empty = off</span></label><input type="number" id="despike" min="0" step="1" placeholder="10"></div>
     </div>
-    <label for="extra">Other options <span class="hint">anything gpx2map / gpx2anim accepts: <code>--track-color #DBE64C --distance 12.4 --water osm</code></span></label>
-    <input type="text" id="extra" placeholder="--track-color #DBE64C">
+    <label for="extra">Other options <span class="hint">anything gpx2map / gpx2anim accepts: <code>--track-color #E4572E --distance 12.4 --water osm</code></span></label>
+    <input type="text" id="extra" placeholder="--track-color #E4572E">
     <label>Equivalent command</label>
     <pre id="cmd"></pre>
   </section>
 
-  <section class="card">
+  <section>
+    <h2>Preview</h2>
+    <div class="preview">
+      <img id="preview" alt="output style preview">
+      <div class="cap">
+        <p id="preview-cap"></p>
+        <p class="hint">This is the chosen style on a sample hike. Your own track, title and the selected
+          format will differ; the real render happens on GitHub Actions.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
     <h2>Run</h2>
     <button class="cta" id="go">Render on GitHub Actions</button>
     <button class="ghost" id="clear">Clear log</button>
@@ -212,9 +253,62 @@ function refresh() {
   if (anim) cmd += ` -o track_${i.format}.${i.output}`;
   else if (svg) cmd += " -o track.svg";
   $("cmd").textContent = cmd;
+
+  // preview: the chosen theme (wood stands in for the engraving look)
+  const prevTheme = svg ? "wood" : i.theme;
+  $("preview").src = PREVIEWS + prevTheme + ".png";
+  $("preview-cap").textContent = svg
+    ? "Laser engraving: title, track, contour lines, lakes and the elevation profile, with one colour "
+      + "per LightBurn layer (fill / line / cut). Shown here as the engraved-wood style."
+    : (png ? "Still map" : out.toUpperCase() + " animation") + ` in the “${i.theme}” theme.`;
 }
 document.querySelectorAll("input, select").forEach(el => { el.addEventListener("input", refresh); el.addEventListener("change", refresh); });
 refresh();
+
+// ---- GitHub API ----
+async function gh(method, path, body, token) {
+  const r = await fetch(api + path, {
+    method, headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!r.ok && r.status !== 204) {
+    let detail = ""; try { detail = (await r.json()).message || ""; } catch (e) {}
+    throw new Error(`${method} ${path}: HTTP ${r.status} ${detail}`);
+  }
+  return r.status === 204 ? null : r.json();
+}
+
+// ---- Actions usage / remaining minutes ----
+async function loadUsage(token) {
+  $("usage").textContent = "Checking the account…";
+  try {
+    const me = await gh("GET", "/user", null, token);
+    let detail = "";
+    try {
+      const b = await gh("GET", `/users/${me.login}/settings/billing/actions`, null, token);
+      const inc = b.included_minutes || 0, used = b.total_minutes_used || 0;
+      const left = Math.max(0, inc - used);
+      const paid = b.total_paid_minutes_used || 0;
+      detail = ` — private-repo minutes this cycle: ${used} of ${inc} used, ${left} left`
+             + (paid ? `, plus ${paid} paid` : "") + ".";
+    } catch (e) {
+      detail = " — add the “user” scope to the token to also show your private-repo minute balance.";
+    }
+    $("usage").innerHTML = `Signed in as <strong>${me.login}</strong>. Runs on this public repo are `
+      + `<strong>free and unlimited</strong>` + detail;
+  } catch (e) {
+    $("usage").textContent = "Could not read the account with this token: " + e.message;
+  }
+}
+let usageTimer;
+function scheduleUsage() {
+  clearTimeout(usageTimer);
+  const t = $("token").value.trim();
+  if (t.length < 20) { $("usage").innerHTML = "Public-repo runs use <strong>unlimited free</strong> Actions minutes. Enter a token to check your account."; return; }
+  usageTimer = setTimeout(() => loadUsage(t), 700);
+}
+$("token").addEventListener("input", scheduleUsage);
+if ($("token").value.trim().length >= 20) loadUsage($("token").value.trim());
 
 // ---- log ----
 function log(msg, cls) {
@@ -224,10 +318,11 @@ function log(msg, cls) {
 }
 function logLink(text, href, download) {
   const line = document.createElement("div"); const a = document.createElement("a");
-  a.href = href; a.textContent = text; a.style.color = "#DBE64C";
+  a.href = href; a.textContent = text;
   if (download) a.download = download; else a.target = "_blank";
   line.textContent = new Date().toLocaleTimeString() + "  "; line.appendChild(a); $("log").appendChild(line);
 }
+$("clear").onclick = () => { $("log").textContent = ""; };
 
 // Fetch the artifact zip with the token, unzip it in the browser and offer the files themselves.
 async function offerFiles(repo, artifact, token) {
@@ -243,20 +338,6 @@ async function offerFiles(repo, artifact, token) {
     const url = URL.createObjectURL(new Blob([data], { type }));
     logLink(`Save ${name} (${(data.length / 1e6).toFixed(1)} MB)`, url, name);
   }
-}
-$("clear").onclick = () => { $("log").textContent = ""; };
-
-// ---- GitHub API ----
-async function gh(method, path, body, token) {
-  const r = await fetch(api + path, {
-    method, headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!r.ok && r.status !== 204) {
-    let detail = ""; try { detail = (await r.json()).message || ""; } catch (e) {}
-    throw new Error(`${method} ${path}: HTTP ${r.status} ${detail}`);
-  }
-  return r.status === 204 ? null : r.json();
 }
 
 // ---- GPX -> gzip -> base64 -> gist parts ----
@@ -298,7 +379,7 @@ $("go").onclick = async () => {
   let gistId = null;
   try {
     let source;
-    if (files.length) { log("Uploading the GPX to a secret gist…"); gistId = await uploadGist(files, token); source = gistId; log("Gist " + gistId + " created.", "ok"); }
+    if (files.length) { log("Uploading the GPX to a secret gist…"); gistId = await uploadGist(files, token); source = gistId; log("Gist created.", "ok"); }
     else source = urls.join(" ");
     const started = Date.now();
     const payload = inputs(source);
@@ -338,7 +419,7 @@ $("go").onclick = async () => {
   } finally {
     if (gistId) {
       try { await gh("DELETE", "/gists/" + gistId, null, token); log("Gist deleted.", "ok"); }
-      catch (e) { log("Could not delete the gist " + gistId + ": " + e.message, "err"); }
+      catch (e) { log("Could not delete the gist: " + e.message, "err"); }
     }
     $("go").disabled = false;
   }

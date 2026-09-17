@@ -39,7 +39,10 @@ You can also skip the form: run the workflow from the **Actions** tab with URL(s
    tokens, with the scopes `repo` (to dispatch the workflow) and `gist` (to upload the GPX).
    Paste it in the form; tick *Remember* to keep it in your browser's local storage only.
    The token never leaves your browser except towards `api.github.com`.
-3. Open the page, choose a GPX, a title, PNG or MP4 or GIF, a theme, and press **Render**.
+   Entering the token also shows, under the field, whether the account can run (public-repo runs
+   are free and unlimited) and, when the token has the `user` scope, the private-repo minute
+   balance. A **Preview** panel shows the chosen theme on a sample hike before you run.
+3. Open the page, choose a GPX, a title, PNG or MP4 or GIF or SVG, a theme, and press **Render**.
    The page follows the run and, when it is done, offers the file itself: it downloads the
    artifact with your token, unzips it in the browser (GitHub always zips artifacts) and shows a
    *Save …mp4* link. A direct link to the zip and to the run page are given as well.
